@@ -586,20 +586,24 @@
             successSummary.innerHTML = summaryHtml;
 
             try {
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ 
-                        tytul: szukajInput.value.trim(),
-                        url: ytLinkInput.value.trim(),
-                        imie: imieInput.value.trim(), 
-                        narodowosc: narodowoscInput.value.trim(),
-                        kod: kodInput.value.trim().toUpperCase(),
-                        urodziny: false, 
-                        deviceId: currentDeviceId 
-                    })
-                });
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    keepalive: true, // <--- TEN PARAMETR ZAPOBIEGA UTRACIE DANYCH PO ZAMKNIĘCIU KARTY
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ 
+                        tytul: szukajInput.value.trim(),
+                        url: ytLinkInput.value.trim(),
+                        imie: imieInput.value.trim(), 
+                        narodowosc: narodowoscInput.value.trim(),
+                        kod: kodInput.value.trim().toUpperCase(),
+                        urodziny: false, 
+                        deviceId: currentDeviceId 
+                    })
+                }).catch(err => console.error("Błąd wysyłania w tle:", err));
+
+                // SZTUCZNE OPÓŹNIENIE DLA LEPSZEGO UX (500 milisekund = pół sekundy)
+                await new Promise(resolve => setTimeout(resolve, 500));
 
                 successMsg.style.display = 'block';
                 document.getElementById('formContent').style.display = 'none';
