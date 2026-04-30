@@ -85,6 +85,19 @@
         .no-results { padding: 20px 15px; text-align: center; color: var(--danger); font-size: 16px; line-height: 1.4; }
         .yt-header { padding: 12px 15px; color: var(--danger); font-weight: bold; font-size: 16px; border-bottom: 1px solid var(--border-color); background: var(--container-bg); position: sticky; top: 0; z-index: 2; }
 
+        /* --- PLAKIETKI DLA BAZY LOKALNEJ --- */
+        .badge {
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            vertical-align: middle;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-yt { background: #c62828; }
+        .badge-ising { background: #0288d1; }
+
         /* --- TRYB WYSZUKIWANIA --- */
         body.search-focus-mode .hide-in-search,
         body.search-focus-mode #txtTitle,
@@ -383,6 +396,18 @@
         return str.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
     }
 
+    // FUNKCJA POMOCNICZA DO WYZNACZANIA MINIATURY Z YT
+    function getYouTubeThumbnail(url) {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        if (match && match[2].length === 11) {
+            const videoId = match[2];
+            return `https://img.youtube.com/vi/${videoId}/default.jpg`;
+        }
+        return null;
+    }
+
     szukajInput.addEventListener('focus', () => {
         isFocusing = true; 
         document.body.classList.add('search-focus-mode');
@@ -435,8 +460,29 @@
             
             matches.forEach(song => {
                 const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.innerHTML = `🎵 <span style="margin-left: 8px;">${song.title}</span>`;
+                div.className = 'yt-suggestion-item'; // Używamy stylu wylistowania z miniaturką
+
+                const isIsing = song.url && song.url.includes('ising.pl');
+                const badgeClass = isIsing ? 'badge badge-ising' : 'badge badge-yt';
+
+                let thumbHtml = '';
+                const ytThumb = getYouTubeThumbnail(song.url);
+
+                if (ytThumb) {
+                    thumbHtml = `<img src="${ytThumb}" style="width: 80px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" alt="thumb">`;
+                } else if (isIsing) {
+                    thumbHtml = `<div style="width: 80px; height: 45px; background: #0288d1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">🎤</div>`;
+                } else {
+                    thumbHtml = `<div style="width: 80px; height: 45px; background: #444; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">🎵</div>`;
+                }
+
+                div.innerHTML = `
+                    ${thumbHtml}
+                    <div class="yt-suggestion-title" style="flex: 1; justify-content: center;">
+                        <span class="song-name">${song.title}</span>
+                        <div><span class="${badgeClass}">${isIsing ? 'iSing' : 'YouTube'}</span></div>
+                    </div>
+                `;
                 
                 div.addEventListener('click', () => {
                     szukajInput.value = song.title;
@@ -460,7 +506,7 @@
         checkInputs();
     });
 
-    // POBIERANIE WYNIKÓW Z SERWERA GOOGLE (Z MINIATURKAMI)
+    // POBIERANIE WYNIKÓW Z SERWERA GOOGLE (Z MINIATURKAMI API YT)
     searchYTHelper.addEventListener('click', async () => {
         const query = szukajInput.value.trim();
         if (!query) return;
@@ -587,23 +633,23 @@
 
             try {
                 fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    keepalive: true, // <--- TEN PARAMETR ZAPOBIEGA UTRACIE DANYCH PO ZAMKNIĘCIU KARTY
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ 
-                        tytul: szukajInput.value.trim(),
-                        url: ytLinkInput.value.trim(),
-                        imie: imieInput.value.trim(), 
-                        narodowosc: narodowoscInput.value.trim(),
-                        kod: kodInput.value.trim().toUpperCase(),
-                        urodziny: false, 
-                        deviceId: currentDeviceId 
-                    })
-                }).catch(err => console.error("Błąd wysyłania w tle:", err));
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    keepalive: true, // <--- TEN PARAMETR ZAPOBIEGA UTRACIE DANYCH PO ZAMKNIĘCIU KARTY
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ 
+                        tytul: szukajInput.value.trim(),
+                        url: ytLinkInput.value.trim(),
+                        imie: imieInput.value.trim(), 
+                        narodowosc: narodowoscInput.value.trim(),
+                        kod: kodInput.value.trim().toUpperCase(),
+                        urodziny: false, 
+                        deviceId: currentDeviceId 
+                    })
+                }).catch(err => console.error("Błąd wysyłania w tle:", err));
 
-                // SZTUCZNE OPÓŹNIENIE DLA LEPSZEGO UX (500 milisekund = pół sekundy)
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // SZTUCZNE OPÓŹNIENIE DLA LEPSZEGO UX (500 milisekund = pół sekundy)
+                await new Promise(resolve => setTimeout(resolve, 500));
 
                 successMsg.style.display = 'block';
                 document.getElementById('formContent').style.display = 'none';
