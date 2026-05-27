@@ -517,7 +517,7 @@
             projectId: "indeks-karaoke",
             storageBucket: "indeks-karaoke.firebasestorage.app",
             messagingSenderId: "870801348066",
-            appId: "1:870801348066:web:1eb45469e18a2ea45e15bb"
+            appId: "1:870801348066:web:1978e917b7674e7bd1293f"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -666,7 +666,7 @@
                 return queryWords.every(word => targetStr.includes(word));
             }).slice(0, 15);
 
-           if (matches.length > 0) {
+            if (matches.length > 0) {
                 suggestionsBox.style.display = 'block';
                 searchYTHelper.style.display = 'none';
 
@@ -675,10 +675,10 @@
                     div.className = 'suggestion-item';
                     div.style.display = 'flex';
                     div.style.alignItems = 'center';
-                    
+
                     // Domyślna ikona, jeśli nie ma linku
                     let thumbHtml = '<span style="font-size: 24px; margin-right: 12px; min-width: 45px; text-align: center;">🎵</span>';
-                    
+
                     if (song.url) {
                         if (song.url.includes('ising.pl')) {
                             // Plakietka dla iSing
@@ -691,7 +691,7 @@
                             } else if (song.url.includes('youtu.be/')) {
                                 vid = song.url.split('youtu.be/')[1].split('?')[0].substring(0, 11);
                             }
-                            
+
                             if (vid) {
                                 // Pobieramy darmową miniaturkę z serwerów YT (bez API!)
                                 thumbHtml = `<img src="https://img.youtube.com/vi/${vid}/default.jpg" style="width: 55px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 12px; background: #111; flex-shrink: 0;">`;
@@ -703,7 +703,7 @@
                     }
 
                     div.innerHTML = `${thumbHtml} <span style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.title}</span>`;
-                    
+
                     div.addEventListener('click', () => {
                         szukajInput.value = song.title;
                         isSelectedFromDb = true;
